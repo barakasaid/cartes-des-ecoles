@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        Carte des écoles
+    </title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./script.js"></script>
+</head>
+
+<body>
+
+    <div id="map1" class="map-container"></div>
+    <div id="map2" class="map-container"></div>
+    <div id="map3" class="map-container"></div>
+
+    <script>
+        // Centers and zooms for each island
+        const islands = [
+            { id: "map1", center: [-11.616787, 43.346509], zoom: 10, geojson: "LOCALISATIONS_EPP-NGAZIDJA.geojson", label: "Ngazidja" },
+            { id: "map2", center: [-12.170, 44.399], zoom: 11, geojson: "LOCALISATIONS_EPP-NDZUANI.geojson", label: "Ndzuani" },
+            { id: "map3", center: [-12.278, 43.743], zoom: 11, geojson: "LOCALISATIONS_EPP-MWALI.geojson", label: "Mwali" }
+        ];
+
+        islands.forEach(island => {
+            const map = L.map(island.id).setView(island.center, island.zoom);
+
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            fetch(island.geojson)
+                .then(response => response.json())
+                .then(geojsonData => {
+                    L.geoJSON(geojsonData, {
+                        onEachFeature: function (feature, layer) {
+                            layer.bindPopup(
+                                `<b>${feature.properties.NOM_ECOLE}</b>
+                                <br/>CIPR: ${feature.properties.CIPR}
+                                <br/>Nom du directeur: ${feature.properties.NOM_DIRECTEUR}
+                                `
+                            );
+                        }
+                    }).addTo(map);
+                });
+        });
+    </script>
+</body>
+
+</html>

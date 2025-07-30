@@ -1,0 +1,13 @@
+body {
+    margin: 0;
+    background-color: white;
+    display: flex;
+    grid-gap: .5rem;
+    padding: .5rem;
+}
+
+.map-container {
+    height: calc(100vh - 32px);
+    width: 33%;
+    border-radius: .5rem;
+}
