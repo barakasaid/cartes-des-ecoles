@@ -9,10 +9,16 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+    <!-- Marker Cluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
     <!-- Make sure you put this AFTER Leaflet's CSS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+    <!-- Marker Cluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
     <link rel="stylesheet" href="./styles.css">
     <script src="./script.js"></script>
@@ -40,19 +46,42 @@
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
+            // Create a marker cluster group
+            const markers = L.markerClusterGroup({
+                maxClusterRadius: 50, // Distance in pixels to cluster markers
+                spiderfyOnMaxZoom: true, // Show individual markers when zoomed to max
+                showCoverageOnHover: false, // Don't show cluster coverage area on hover
+                zoomToBoundsOnClick: true // Zoom to cluster bounds when clicked
+            });
+
             fetch(island.geojson)
                 .then(response => response.json())
                 .then(geojsonData => {
                     L.geoJSON(geojsonData, {
+                        pointToLayer: function (feature, coords) {
+                            // Create individual markers
+                            return L.marker(coords);
+                        },
                         onEachFeature: function (feature, layer) {
-                            layer.bindPopup(
-                                `<b>${feature.properties.NOM_ECOLE}</b>
-                                <br/>CIPR: ${feature.properties.CIPR}
-                                <br/>Nom du directeur: ${feature.properties.NOM_DIRECTEUR}
-                                `
-                            );
+                            // Create popup content with all properties
+                            let popupContent = '';
+                            
+                            // Iterate through all properties
+                            for (const [key, value] of Object.entries(feature.properties)) {
+                                // Skip empty or null values if you want
+                                if (value !== null && value !== undefined && value !== '') {
+                                    popupContent += `<b>${key}:</b> ${value}<br/>`;
+                                }
+                            }
+                            
+                            layer.bindPopup(popupContent);
+                            // Add marker to cluster group instead of directly to map
+                            markers.addLayer(layer);
                         }
-                    }).addTo(map);
+                    });
+                    
+                    // Add the marker cluster group to the map
+                    map.addLayer(markers);
                 });
         });
     </script>
